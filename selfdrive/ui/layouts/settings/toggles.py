@@ -35,7 +35,7 @@ DESCRIPTIONS = {
   "AlwaysOnDM": tr_noop("Enable driver monitoring even when sunnypilot is not engaged."),
   'RecordFront': tr_noop("Upload data from the driver facing camera and help improve the driver monitoring algorithm."),
   "IsMetric": tr_noop("Display speed in km/h instead of mph."),
-  "CameraOffset": tr_noop("Adjust lateral position in lane. Positive values shift right, negative shift left. Affects both visual path and actual steering."),
+  "CameraOffset": tr_noop("Adjust lateral position in lane. Positive values shift left, negative shift right. If the car hugs the left line, use a negative value. Affects both visual path and actual steering."),
   "RecordAudio": tr_noop("Record and store microphone audio while driving. The audio will be included in the dashcam video in comma connect."),
 }
 

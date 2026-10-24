@@ -53,7 +53,7 @@ T_IDXS_LST = [index_function(idx, max_val=MAX_T, max_idx=N) for idx in range(N+1
 T_IDXS = np.array(T_IDXS_LST)
 FCW_IDXS = T_IDXS < 5.0
 T_DIFFS = np.diff(T_IDXS, prepend=[0.])
-COMFORT_BRAKE = 2.5
+COMFORT_BRAKE = 3.0  # Raised from 2.5 - less drop-back after slower cars cut in; cruising gap unchanged
 STOP_DISTANCE = 3.5  # Reduced from 6.0 - Chevy Volt 2018 true time-based following
 CRUISE_MIN_ACCEL = -1.2
 CRUISE_MAX_ACCEL = 1.6
@@ -71,13 +71,14 @@ def get_jerk_factor(personality=log.LongitudinalPersonality.standard):
 
 
 def get_T_FOLLOW(personality=log.LongitudinalPersonality.standard):
-  # Chevy Volt 2018 - True time-based following distances
+  # Chevy Volt 2018 - steady-state gap is exactly T_FOLLOW * v + STOP_DISTANCE (stock: 1.75 / 1.45 / 1.25)
+  # Standard/aggressive kept under 2.0s: gaps beyond ~2.0-2.5s invite cut-ins in real traffic
   if personality==log.LongitudinalPersonality.relaxed:
-    return 3.0  # 3.0 second following distance
+    return 2.5
   elif personality==log.LongitudinalPersonality.standard:
-    return 2.2  # 2.2 second following distance
-  elif personality==log.LongitudinalPersonality.aggressive:
     return 1.5  # 1.5 second following distance
+  elif personality==log.LongitudinalPersonality.aggressive:
+    return 0.9  # 0.9 second following distance (~1.25 truck lengths at 60 mph); do not go lower
   else:
     raise NotImplementedError("Longitudinal personality not supported")
 
@@ -85,10 +86,10 @@ def get_stopped_equivalence_factor(v_lead):
   return (v_lead**2) / (2 * COMFORT_BRAKE)
 
 def get_safe_obstacle_distance(v_ego, t_follow):
-  # Modified for Chevy Volt 2018 - True time-based following with minimal buffer
-  # Formula: distance = t_follow * v_ego + fixed_buffer
-  # This provides constant-time following distances (e.g., 1.5s/2.2s/3.0s) with small safety margin
-  return t_follow * v_ego + STOP_DISTANCE
+  # Do NOT remove the v_ego**2 term: it cancels against get_stopped_equivalence_factor(v_lead)
+  # on the lead obstacle, so the steady-state gap is already t_follow * v + STOP_DISTANCE.
+  # Tune following time via get_T_FOLLOW() instead.
+  return (v_ego**2) / (2 * COMFORT_BRAKE) + t_follow * v_ego + STOP_DISTANCE
 
 def gen_long_model():
   model = AcadosModel()
